@@ -9,25 +9,31 @@ const TABLET =
   "(min-width: 768px) and (max-width: 1023.98px) and (prefers-reduced-motion: no-preference)";
 const MOBILE = "(max-width: 767.98px) and (prefers-reduced-motion: no-preference)";
 
-// The hero creates its pinned ScrollTrigger after its entrance, i.e. after
-// these. A lower priority makes ScrollTrigger refresh these after the hero's
-// pin spacing exists, so their start/end positions account for it.
+// The hero creates its pinned ScrollTrigger after its entrance finishes, i.e.
+// after these are created. A lower priority makes ScrollTrigger recalculate
+// these after the hero's pin spacing exists in the DOM.
 const REFRESH_AFTER_HERO = -1;
+
+// Lenis already smooths the raw wheel/touch input, so a light scrub here
+// avoids stacking a second, independent layer of lag on top of it. The
+// previous `scrub: 1` doubled up with Lenis's own smoothing, which is what
+// made the section feel laggy and disconnected from the pointer.
+const SCRUB = 0.35;
 
 type PinnedProfile = {
   /** Scroll length of the pinned story. */
   distance: string;
-  /** Multiplier for every parallax offset. */
+  /** Multiplier for every parallax offset — lighter on tablet. */
   parallax: number;
-  /** Radius of the circular window the landscape first appears through. */
-  startRadius: number;
 };
 
 /**
- * Origins sequence. The landscape first appears through a circular window —
- * echoing the hero's product disc — that rises from below as the hero lifts
- * away. Once the section reaches the top it pins, the window opens to full
- * bleed, the layers separate in parallax, and the story copy reveals.
+ * Origins sequence: one ScrollTrigger per breakpoint, each driving a single
+ * timeline. The section scrolls into view natively — nothing animates it
+ * before the pin — then locks into place once it reaches the top: the
+ * landscape settles from a slight zoom, its layers separate in a light
+ * parallax, and the story copy reveals. Everything animates transform or
+ * opacity only, so nothing forces a repaint mid-scroll.
  *
  * With reduced motion no handler runs: no pin, image and copy fully visible.
  */
@@ -38,12 +44,8 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
       if (!section) return;
 
       const mm = gsap.matchMedia();
-      mm.add(DESKTOP, () =>
-        createPinnedStory(section, { distance: "+=130%", parallax: 1, startRadius: 20 }),
-      );
-      mm.add(TABLET, () =>
-        createPinnedStory(section, { distance: "+=90%", parallax: 0.6, startRadius: 24 }),
-      );
+      mm.add(DESKTOP, () => createPinnedStory(section, { distance: "+=100%", parallax: 1 }));
+      mm.add(TABLET, () => createPinnedStory(section, { distance: "+=80%", parallax: 0.6 }));
       mm.add(MOBILE, () => createMobileStory(section));
 
       return () => mm.revert();
@@ -52,108 +54,77 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
   );
 }
 
-function createPinnedStory(
-  section: HTMLElement,
-  { distance, parallax, startRadius }: PinnedProfile,
-) {
+function createPinnedStory(section: HTMLElement, { distance, parallax }: PinnedProfile) {
   const q = gsap.utils.selector(section);
-  const image = q("[data-origins-image]");
   const layers = gsap.utils.toArray<HTMLElement>("[data-origins-layer]", section);
 
-  // Approach: while the hero lifts away, the window rises slightly slower
-  // than the page, so the landscape reads as sitting behind the transition.
-  gsap.fromTo(
-    image,
-    { y: () => -window.innerHeight * 0.1 * parallax },
-    {
-      y: 0,
-      ease: "none",
-      scrollTrigger: {
-        trigger: section,
-        start: "top bottom",
-        end: "top top",
-        scrub: true,
-        invalidateOnRefresh: true,
-        refreshPriority: REFRESH_AFTER_HERO,
-      },
-    },
-  );
-
+  // One timeline, one ScrollTrigger, one scrub value for every element in
+  // this section — nothing else touches these nodes, so there is no
+  // competing transform and no mismatched smoothing at any handoff.
   const tl = gsap.timeline({
-    defaults: { ease: "none" },
+    // force3D promotes these to their own GPU layer up front, instead of
+    // the browser deciding mid-scroll — avoids a layer-promotion hitch on
+    // the first frame each element starts moving.
+    defaults: { ease: "none", force3D: true },
     scrollTrigger: {
       trigger: section,
       start: "top top",
       end: distance,
       pin: true,
-      scrub: 1,
+      scrub: SCRUB,
       anticipatePin: 1,
       invalidateOnRefresh: true,
       refreshPriority: REFRESH_AFTER_HERO,
     },
   });
 
-  // The window opens into the world; the landscape settles as it does.
-  tl.fromTo(
-    image,
-    { clipPath: `circle(${startRadius}% at 50% 50%)` },
-    { clipPath: "circle(75% at 50% 50%)", duration: 0.5, ease: "power2.inOut" },
-    0,
-  )
-    .fromTo(q("[data-origins-landscape]"), { scale: 1.25 }, { scale: 1, duration: 1, ease: "power1.out" }, 0)
-    .fromTo(q("[data-origins-foreground]"), { yPercent: 30 }, { yPercent: 0, duration: 0.8, ease: "power1.out" }, 0)
-    .fromTo(q("[data-origins-mist]"), { xPercent: -4 }, { xPercent: 4, duration: 1 }, 0);
+  // The landscape settles from a slight zoom as the section locks into
+  // place — a small, transform-only move. (No clip-path/mask here: animating
+  // a clip on a large, blurred, multi-layer image forced a repaint every
+  // scroll tick and was the main source of the stutter.)
+  tl.fromTo(q("[data-origins-landscape]"), { scale: 1.06 }, { scale: 1, duration: 0.55, ease: "power1.out" }, 0)
+    .fromTo(q("[data-origins-foreground]"), { yPercent: 14 }, { yPercent: 0, duration: 0.55, ease: "power1.out" }, 0)
+    .fromTo(q("[data-origins-mist]"), { xPercent: -3 }, { xPercent: 3, duration: 1 }, 0);
 
-  // Deeper layers move less than nearer ones.
+  // Depth-based parallax, running the full pin so the layers keep drifting
+  // — never fully still — right up to the moment it releases.
   layers.forEach((layer) => {
     const depth = Number(layer.dataset.depth ?? 0.5);
-    tl.fromTo(
-      layer,
-      { y: depth * 60 * parallax },
-      { y: -depth * 60 * parallax, duration: 1 },
-      0,
-    );
+    const travel = 24 * depth * parallax;
+    tl.fromTo(layer, { y: travel }, { y: -travel, duration: 1 }, 0);
   });
 
-  // Story copy, with its own slow drift against the landscape.
-  tl.fromTo(q("[data-origins-copy]"), { y: 60 * parallax }, { y: -20 * parallax, duration: 1 }, 0)
-    .fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0.3)
-    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.42)
-    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.07, ease: "power3.out" }, 0.46)
-    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.25, ease: "power2.out" }, 0.66)
-    .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.8)
-    // Brief hold so the finished composition rests before the pin releases.
-    .to({}, { duration: 0.15 });
+  // Story copy.
+  tl.fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.35 }, 0)
+    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.1)
+    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.24, stagger: 0.06, ease: "power3.out" }, 0.18)
+    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.22, ease: "power2.out" }, 0.4)
+    .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.58);
 }
 
-// Phones: no pin and no layer parallax — a short scrubbed reveal that
-// completes as the section reaches the top, leaving the copy fully readable.
+// Phones: no pin. A short, native-scroll-linked reveal that finishes as the
+// section reaches the top, so normal scrolling resumes immediately after —
+// no clip-path here either, for the same performance reason as above.
 function createMobileStory(section: HTMLElement) {
   const q = gsap.utils.selector(section);
 
   const tl = gsap.timeline({
-    defaults: { ease: "none" },
+    defaults: { ease: "none", force3D: true },
     scrollTrigger: {
       trigger: section,
-      start: "top 85%",
+      start: "top 80%",
       end: "top top",
-      scrub: 0.6,
+      scrub: SCRUB,
       invalidateOnRefresh: true,
       refreshPriority: REFRESH_AFTER_HERO,
     },
   });
 
-  tl.fromTo(
-    q("[data-origins-image]"),
-    { clipPath: "circle(26% at 50% 45%)" },
-    { clipPath: "circle(75% at 50% 50%)", duration: 0.6, ease: "power2.inOut" },
-    0,
-  )
-    .fromTo(q("[data-origins-landscape]"), { scale: 1.15 }, { scale: 1, duration: 1 }, 0)
-    .fromTo(q("[data-origins-foreground]"), { yPercent: 15 }, { yPercent: 0, duration: 1 }, 0)
-    .fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0.4)
-    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 0.5)
-    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.06, ease: "power3.out" }, 0.55)
-    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 0.75)
-    .fromTo(q("[data-origins-location]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15 }, 0.85);
+  tl.fromTo(q("[data-origins-landscape]"), { scale: 1.05 }, { scale: 1, duration: 1, ease: "power1.out" }, 0)
+    .fromTo(q("[data-origins-foreground]"), { yPercent: 8 }, { yPercent: 0, duration: 1, ease: "power1.out" }, 0)
+    .fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, 0.2)
+    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 0.3)
+    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.24, stagger: 0.05, ease: "power3.out" }, 0.4)
+    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.2 }, 0.62)
+    .fromTo(q("[data-origins-location]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.15 }, 0.8);
 }
