@@ -32,7 +32,7 @@ export function Origins() {
         className="bg-grain pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-overlay"
       />
 
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-10">
         <OriginsCopy />
       </div>
     </section>

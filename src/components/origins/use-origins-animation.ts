@@ -81,7 +81,10 @@ function createPinnedStory(section: HTMLElement, { distance, parallax }: Profile
     )
     .fromTo(q("[data-origins-ring]"), { rotation: 0, autoAlpha: 0 }, { rotation: 34 * parallax, autoAlpha: 0.4, duration: 1 }, 0)
     .fromTo(q("[data-origins-ridge-far]"), { y: 36 * parallax }, { y: -14 * parallax, duration: 1 }, 0)
-    .fromTo(q("[data-origins-ridge-near]"), { y: 54 * parallax }, { y: -22 * parallax, duration: 1 }, 0);
+    .fromTo(q("[data-origins-ridge-near]"), { y: 54 * parallax }, { y: -22 * parallax, duration: 1 }, 0)
+    // Closest to camera, so it travels furthest — the branch drifts past
+    // faster than anything behind it, the clearest parallax cue there is.
+    .fromTo(q("[data-origins-foreground]"), { y: 50 * parallax, autoAlpha: 0.75 }, { y: -10 * parallax, autoAlpha: 1, duration: 1 }, 0);
 
   // Story copy.
   tl.fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0.05)
