@@ -1,9 +1,13 @@
+import { Hero } from "@/components/hero/hero";
+import { SiteHeader } from "@/components/layout/site-header";
+
 export default function Home() {
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
-      <h1 className="text-center text-3xl font-semibold tracking-tight">
-        Tea Website — Foundation Ready
-      </h1>
-    </main>
+    <>
+      <SiteHeader />
+      <main id="main" className="flex-1">
+        <Hero />
+      </main>
+    </>
   );
 }
