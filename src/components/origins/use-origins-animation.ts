@@ -14,28 +14,27 @@ const MOBILE = "(max-width: 767.98px) and (prefers-reduced-motion: no-preference
 // these after the hero's pin spacing exists in the DOM.
 const REFRESH_AFTER_HERO = -1;
 
-// Lenis already smooths the raw wheel/touch input; stacking GSAP's own scrub
-// lag on top of that is what made an earlier version feel disconnected from
-// the pointer, so this stays light.
-const SCRUB = 0.35;
+// Matches the hero's own pinned scrub exactly, so both cinematic sections
+// feel like the same camera rather than two different scroll personalities.
+const SCRUB = 1;
 
 type Profile = {
-  /** Where the reveal starts, relative to the viewport. */
-  start: string;
+  /** Scroll length of the pinned story. */
+  distance: string;
   /** Multiplier for every parallax offset — lighter on smaller screens. */
   parallax: number;
 };
 
 /**
- * Origins reveal: one ScrollTrigger, one timeline, no pin. The section is a
- * normal block in the page flow — scrolling through it is always exactly
- * 1:1 with the pointer, with no "locked" phase to feel stuck in. The
- * landscape settles from a slight zoom, its glow and two ridges drift at
- * slightly different rates, and the story copy reveals — all scrubbed
- * directly to scroll position, finishing by the time the section reaches
- * the top so normal scrolling continues with nothing left mid-animation.
+ * Origins sequence: one ScrollTrigger, one timeline, pinned — the same
+ * mechanism as the hero, so scrolling from one cinematic section into the
+ * next feels continuous rather than switching styles. While pinned, the
+ * landscape settles from a slight zoom, the glow and its ring drift and
+ * turn, the two ridges separate in parallax, and the story copy reveals.
+ * Every property is transform/opacity; there is no clip-path and no
+ * blur() filter anywhere in this section, so nothing forces a repaint.
  *
- * With reduced motion no handler runs: image and copy are fully visible.
+ * With reduced motion no handler runs: no pin, image and copy fully visible.
  */
 export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
   useGSAP(
@@ -44,9 +43,9 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
       if (!section) return;
 
       const mm = gsap.matchMedia();
-      mm.add(DESKTOP, () => createReveal(section, { start: "top bottom", parallax: 1 }));
-      mm.add(TABLET, () => createReveal(section, { start: "top bottom", parallax: 0.7 }));
-      mm.add(MOBILE, () => createReveal(section, { start: "top 85%", parallax: 0.4 }));
+      mm.add(DESKTOP, () => createPinnedStory(section, { distance: "+=110%", parallax: 1 }));
+      mm.add(TABLET, () => createPinnedStory(section, { distance: "+=85%", parallax: 0.65 }));
+      mm.add(MOBILE, () => createPinnedStory(section, { distance: "+=55%", parallax: 0.4 }));
 
       return () => mm.revert();
     },
@@ -54,32 +53,44 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
   );
 }
 
-function createReveal(section: HTMLElement, { start, parallax }: Profile) {
+function createPinnedStory(section: HTMLElement, { distance, parallax }: Profile) {
   const q = gsap.utils.selector(section);
 
   const tl = gsap.timeline({
     defaults: { ease: "none", force3D: true },
     scrollTrigger: {
       trigger: section,
-      start,
-      end: "top top",
+      start: "top top",
+      end: distance,
+      pin: true,
       scrub: SCRUB,
+      anticipatePin: 1,
       invalidateOnRefresh: true,
       refreshPriority: REFRESH_AFTER_HERO,
     },
   });
 
-  // The landscape settles from a slight zoom as it scrolls into place — a
-  // small, transform-only move, no clip-path or filter involved.
-  tl.fromTo(q("[data-origins-landscape]"), { scale: 1 + 0.05 * parallax }, { scale: 1, duration: 1, ease: "power1.out" }, 0)
-    .fromTo(q("[data-origins-glow]"), { autoAlpha: 0.5, y: 14 * parallax }, { autoAlpha: 1, y: 0, duration: 1 }, 0)
-    .fromTo(q("[data-origins-ridge-far]"), { y: 22 * parallax }, { y: 0, duration: 1 }, 0)
-    .fromTo(q("[data-origins-ridge-near]"), { y: 34 * parallax }, { y: 0, duration: 1 }, 0);
+  // The landscape settles from a slight zoom as the section locks into
+  // place — transform-only, no clip-path or filter involved.
+  tl.fromTo(q("[data-origins-landscape]"), { scale: 1 + 0.08 * parallax }, { scale: 1, duration: 0.6, ease: "power1.out" }, 0)
+    .fromTo(
+      q("[data-origins-glow]"),
+      { autoAlpha: 0.45, scale: 0.92, x: -10 * parallax },
+      { autoAlpha: 1, scale: 1, x: 10 * parallax, duration: 1 },
+      0,
+    )
+    .fromTo(q("[data-origins-ring]"), { rotation: 0, autoAlpha: 0 }, { rotation: 34 * parallax, autoAlpha: 0.4, duration: 1 }, 0)
+    .fromTo(q("[data-origins-ridge-far]"), { y: 36 * parallax }, { y: -14 * parallax, duration: 1 }, 0)
+    .fromTo(q("[data-origins-ridge-near]"), { y: 54 * parallax }, { y: -22 * parallax, duration: 1 }, 0);
 
   // Story copy.
-  tl.fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, 0.1)
-    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.25)
-    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.24, stagger: 0.06, ease: "power3.out" }, 0.35)
-    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.6)
-    .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.78);
+  tl.fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0.05)
+    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.16)
+    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.22, stagger: 0.06, ease: "power3.out" }, 0.24)
+    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.46)
+    .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.62);
+
+  // Parallax and the ring keep drifting through to t=1, so the last third of
+  // the pin still has motion to follow rather than sitting dead once the
+  // copy has landed.
 }

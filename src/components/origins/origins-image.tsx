@@ -38,6 +38,18 @@ export function OriginsImage() {
           }}
         />
 
+        {/* A slow-turning ring around the light — the same motif as the
+            hero's product orbit, tying the two sections together. */}
+        <svg
+          data-origins-ring
+          aria-hidden="true"
+          viewBox="0 0 100 100"
+          className="absolute top-[46%] left-[54%] size-[46%] -translate-x-1/2 -translate-y-1/2 opacity-40"
+        >
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#e7cf9c" strokeWidth="0.25" />
+          <circle cx="50" cy="4" r="0.9" fill="#e7cf9c" />
+        </svg>
+
         <Ridge
           dataAttr="data-origins-ridge-far"
           path="M0,560 C220,500 420,545 660,520 C900,495 1120,540 1360,515 C1460,505 1540,515 1600,510 L1600,900 L0,900 Z"
