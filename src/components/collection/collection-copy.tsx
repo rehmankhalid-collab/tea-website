@@ -7,7 +7,7 @@ const HEADLINE_LINES = [
 
 export function CollectionCopy() {
   return (
-    <div data-collection-copy className="mx-auto max-w-[1440px] px-6 md:px-10">
+    <div className="mx-auto max-w-[1440px] px-6 md:px-10">
       <p
         data-collection-eyebrow
         className="mb-6 flex items-center gap-4 text-[0.7rem] font-medium tracking-[0.3em] text-stone uppercase md:mb-8"

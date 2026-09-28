@@ -1,11 +1,11 @@
-import { TeaBox } from "./tea-box";
+import Image, { type StaticImageData } from "next/image";
 
 export type Product = {
   number: string;
   name: string;
   note: string;
   weight: string;
-  sealColor: string;
+  image: StaticImageData;
   signature?: boolean;
 };
 
@@ -13,13 +13,19 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="flex flex-col items-center text-center">
       <div className="relative w-full max-w-[13rem]">
-        {/* The extra padding + matching negative margin give the box's own
+        {/* The extra padding + matching negative margin give the render's own
             drop-shadow room to sit outside the clipped area, so the curtain
-            can fully cover the box without visibly cropping the shadow. */}
+            can fully cover the tin without visibly cropping the shadow. */}
         <div data-collection-box className="relative -m-10 overflow-hidden p-10">
-          <TeaBox name={product.name} number={product.number} sealColor={product.sealColor} />
+          <Image
+            src={product.image}
+            alt={`${product.name} tea, in a Veyla wooden caddy`}
+            className="w-full"
+            sizes="(min-width: 1024px) 13rem, 40vw"
+            placeholder="blur"
+          />
           {/* The curtain: a solid panel matching the section background,
-              lifted away like a stage curtain to reveal the box beneath. */}
+              lifted away like a stage curtain to reveal the tin beneath. */}
           <div data-collection-curtain aria-hidden="true" className="absolute inset-10 bg-ink" />
         </div>
         {product.signature && (
