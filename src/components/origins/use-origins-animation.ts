@@ -89,4 +89,11 @@ function createScene(section: HTMLElement, { distance, scale }: Profile) {
     .fromTo(q("[data-origins-line]"), { yPercent: 100 }, { yPercent: 0, duration: 0.2, stagger: 0.06, ease: "power3.out" }, 0.22)
     .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.46)
     .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.16, ease: "power2.out" }, 0.62);
+
+  // The pin releases at the very end of this timeline and the section then
+  // scrolls away like any other content — but the copy sits bottom-aligned
+  // in the section, so without an exit fade it would still be fully opaque
+  // as it scrolls up past the transparent fixed header. Clear it just before
+  // release so nothing is left visible to overlap the header on the way out.
+  tl.to(q("[data-origins-copy]"), { autoAlpha: 0, duration: 0.16, ease: "power1.in" }, 0.8);
 }

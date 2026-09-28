@@ -42,7 +42,13 @@ export function Collection() {
       id="collection"
       data-collection
       aria-labelledby="collection-title"
-      className="relative bg-ink py-24 md:py-32 lg:py-40"
+      // The eyebrow/headline fade in use-collection-animation.ts (scrubbed
+      // as this content nears the top of the viewport) is what actually
+      // keeps them from showing through the transparent header. This floor
+      // just guarantees the section is never shorter than the viewport, so
+      // there's always some scroll room left below the copy for that fade to
+      // play out in before the page's own bottom is reached.
+      className="relative min-h-svh bg-ink py-24 md:py-32 lg:py-40"
     >
       <div aria-hidden="true" className="bg-grain pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay" />
 

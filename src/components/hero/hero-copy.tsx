@@ -25,7 +25,7 @@ export function HeroHeadline() {
     <h1
       id="hero-title"
       data-hero-headline
-      className="font-display text-[clamp(3.4rem,9vw,8.75rem)] leading-[0.9] tracking-[-0.025em]"
+      className="font-display text-[clamp(3.4rem,9vw,8.75rem)] leading-[1.02] tracking-[-0.008em]"
     >
       {HEADLINE_LINES.map((line) => (
         <span key={line.text} className="block overflow-hidden pb-[0.06em]">

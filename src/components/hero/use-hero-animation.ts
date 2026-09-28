@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { markLayoutSettled } from "@/lib/layout-ready";
 
 const DESKTOP = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
 const COMPACT = "(max-width: 1023.98px) and (prefers-reduced-motion: no-preference)";
@@ -30,6 +31,10 @@ export function useHeroAnimation(scope: RefObject<HTMLElement | null>) {
 
       if (window.matchMedia(REDUCED_MOTION).matches) {
         reveal();
+        // No pin is ever created on this path, so the page's scroll layout
+        // is already final — sections below (e.g. Collection) can proceed
+        // immediately rather than waiting for a pin that isn't coming.
+        markLayoutSettled();
         return;
       }
 
@@ -40,7 +45,13 @@ export function useHeroAnimation(scope: RefObject<HTMLElement | null>) {
       // useGSAP context, so they are reverted on unmount.
       intro.eventCallback(
         "onComplete",
-        contextSafe(() => createScrollScenes(section)),
+        contextSafe(() => {
+          createScrollScenes(section);
+          // The pin (and its spacer) now exists — the page's final scroll
+          // layout is settled, so sections below can safely set up any
+          // scroll-position-dependent, one-shot behavior of their own.
+          markLayoutSettled();
+        }),
       );
 
       // The from() tweens have already applied their start states.
@@ -122,9 +133,12 @@ function createScrollScenes(section: HTMLElement) {
       },
     });
 
-    // Copy exits first
+    // Copy exits first. The content group holds the eyebrow, which sits only
+    // ~16px below the transparent header at rest — so its travel here has to
+    // stay inside that clearance, or it visibly crosses into the header's
+    // zone while still partially opaque, regardless of how the fade is timed.
     tl.to(q("[data-hero-headline]"), { yPercent: -10, autoAlpha: 0, duration: 0.3, ease: "power1.in" }, 0)
-      .to(q("[data-hero-content]"), { y: -50, autoAlpha: 0, duration: 0.4, ease: "power1.in" }, 0.04)
+      .to(q("[data-hero-content]"), { y: -14, autoAlpha: 0, duration: 0.4, ease: "power1.in" }, 0.04)
       .to(q("[data-hero-details]"), { y: 16, autoAlpha: 0, duration: 0.2 }, 0);
 
     // Product takes centre stage. offsetLeft ignores transforms, so the

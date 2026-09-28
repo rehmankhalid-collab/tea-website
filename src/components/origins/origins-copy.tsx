@@ -26,7 +26,7 @@ export function OriginsCopy() {
       <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-6">
         <h2
           id="origins-title"
-          className="font-display text-[clamp(2.9rem,6.4vw,6.5rem)] leading-[0.95] tracking-[-0.02em] lg:col-span-7"
+          className="font-display text-[clamp(2.9rem,6.4vw,6.5rem)] leading-[1.05] tracking-[-0.005em] lg:col-span-7"
         >
           {HEADLINE_LINES.map((segments, index) => (
             <span key={index} className="block overflow-hidden pb-[0.06em]">

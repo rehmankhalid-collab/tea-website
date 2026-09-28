@@ -7,7 +7,7 @@ const HEADLINE_LINES = [
 
 export function CollectionCopy() {
   return (
-    <div className="mx-auto max-w-[1440px] px-6 md:px-10">
+    <div data-collection-copy className="mx-auto max-w-[1440px] px-6 md:px-10">
       <p
         data-collection-eyebrow
         className="mb-6 flex items-center gap-4 text-[0.7rem] font-medium tracking-[0.3em] text-stone uppercase md:mb-8"
@@ -19,7 +19,7 @@ export function CollectionCopy() {
       <div className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-6">
         <h2
           id="collection-title"
-          className="font-display text-[clamp(2.6rem,6vw,5.5rem)] leading-[0.95] tracking-[-0.02em] lg:col-span-7"
+          className="font-display text-[clamp(2.6rem,6vw,5.5rem)] leading-[1.05] tracking-[-0.005em] lg:col-span-7"
         >
           {HEADLINE_LINES.map((segments, index) => (
             <span key={index} className="block overflow-hidden pb-[0.06em]">
