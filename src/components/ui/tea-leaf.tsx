@@ -1,13 +1,17 @@
+import type { CSSProperties } from "react";
+
 type TeaLeafProps = {
   className?: string;
+  style?: CSSProperties;
 };
 
-/** Decorative tea leaf. Colour comes from `currentColor` (set via text-*). */
-export function TeaLeaf({ className }: TeaLeafProps) {
+/** Decorative tea leaf. Colour comes from `currentColor` (set via text-* or style.color). */
+export function TeaLeaf({ className, style }: TeaLeafProps) {
   return (
     <svg
       viewBox="0 0 60 120"
       className={className}
+      style={style}
       fill="none"
       aria-hidden="true"
       focusable="false"

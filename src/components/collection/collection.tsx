@@ -2,73 +2,36 @@
 
 import { useRef } from "react";
 
-import gyokuroTin from "../../../public/images/products/veyla-tin-gyokuro.png";
-import hojichaTin from "../../../public/images/products/veyla-tin-hojicha.png";
-import senchaTin from "../../../public/images/products/veyla-tin-sencha.png";
-import { CollectionCopy } from "./collection-copy";
-import { ProductCard, type Product } from "./product-card";
+import { CollectionBackground } from "./collection-background";
+import { CollectionChapter } from "./collection-chapter";
+import { CollectionHeading } from "./collection-heading";
+import { TEAS } from "./collection-data";
 import { useCollectionAnimation } from "./use-collection-animation";
 
-const PRODUCTS: Product[] = [
-  {
-    number: "No. 03",
-    name: "Sencha",
-    note: "Bright and grassy, the first flush of spring steamed within hours of picking.",
-    weight: "50 g",
-    image: senchaTin,
-  },
-  {
-    number: "No. 05",
-    name: "Hōjicha",
-    note: "Roasted over charcoal until sweet and toasty, gentle enough for evenings.",
-    weight: "50 g",
-    image: hojichaTin,
-  },
-  {
-    number: "No. 07",
-    name: "Gyokuro",
-    note: "Shade-grown for three weeks before harvest — deep umami, quietly intense.",
-    weight: "50 g",
-    image: gyokuroTin,
-    signature: true,
-  },
-];
-
-/** Section 3: the products, as a small numbered collection rather than a shop grid. */
+/**
+ * Section 3: one tin at a time, opened, filled and sealed again by the
+ * user's own scroll — Sencha, then Hōjicha, then Gyokuro. Default markup
+ * (below) is a plain, normal-flow stack of closed tins: the reduced-motion
+ * fallback, and what renders before the cinematic staging in
+ * use-collection-animation.ts takes over.
+ */
 export function Collection() {
   const sectionRef = useRef<HTMLElement>(null);
   useCollectionAnimation(sectionRef);
 
   return (
-    <section
-      ref={sectionRef}
-      id="collection"
-      data-collection
-      aria-labelledby="collection-title"
-      // Collection is the last section on the page, so scrolling to the
-      // absolute bottom stops the instant its own bottom edge hits the
-      // viewport bottom — at that point its top sits exactly
-      // `sectionHeight - viewportHeight` above the viewport. Unless that gap
-      // is bigger than the distance from the section's top down past its own
-      // eyebrow and headline, those are still on screen, under the header,
-      // once scrolling maxes out. Tying the minimum height to the viewport
-      // (100svh plus a fixed margin comfortably larger than the eyebrow and
-      // headline together) keeps that gap large enough regardless of
-      // viewport height. Any shortfall vs. the product grid's own height
-      // just shows as extra (on-brand, bg-ink) space at the very end of the
-      // page, rather than as padding to visually balance against the top.
-      className="relative min-h-[calc(100svh+30rem)] bg-ink py-24 md:py-32 lg:py-40"
-    >
-      <div aria-hidden="true" className="bg-grain pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay" />
+    <section ref={sectionRef} id="collection" data-collection aria-labelledby="collection-title" className="relative bg-ink">
+      <CollectionBackground />
+      <CollectionHeading />
 
-      <div className="relative">
-        <CollectionCopy />
-
-        <div className="mx-auto mt-20 grid max-w-[1440px] grid-cols-1 gap-16 px-6 sm:grid-cols-2 md:px-10 lg:mt-28 lg:grid-cols-3 lg:gap-12">
-          {PRODUCTS.map((product) => (
-            <ProductCard key={product.number} product={product} />
-          ))}
-        </div>
+      {/* Horizontal safe margins live on each chapter, not here: once a
+          chapter is absolutely positioned (cinematic mode), `inset:0` fills
+          the stage's border box, not its padding box, so padding set here
+          would never reach it. */}
+      <div data-collection-stage className="relative flex flex-col gap-28 py-28 lg:gap-36 lg:py-36">
+        {TEAS.map((tea) => (
+          <CollectionChapter key={tea.id} tea={tea} />
+        ))}
       </div>
     </section>
   );
