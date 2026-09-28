@@ -22,14 +22,15 @@ export function Origins() {
       <OriginsImage />
 
       {/* A quiet, film-toned grade rather than a graphic overlay: a faint
-          overall tint toward the brand's palette, and darkening concentrated
-          low, only enough to hold the type — most of the photograph is left
-          untouched. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-ink/10" />
+          overall tint toward the brand's palette, and darkening that holds
+          the full height the type occupies — solid enough at the type to
+          read reliably over a bright, uneven photograph, fading out well
+          before the top third, which is left untouched. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-ink/14" />
       <div
         data-origins-scrim
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(8,12,9,0.72)_0%,rgba(8,12,9,0.32)_28%,transparent_56%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(6,10,7,0.88)_0%,rgba(6,10,7,0.62)_30%,rgba(6,10,7,0.26)_55%,transparent_78%)]"
       />
       <div
         aria-hidden="true"

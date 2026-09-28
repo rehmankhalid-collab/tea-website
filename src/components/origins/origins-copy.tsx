@@ -9,11 +9,15 @@ export function OriginsCopy() {
   return (
     <div
       data-origins-copy
-      className="relative mx-auto flex h-full w-full max-w-[1440px] flex-col justify-end px-6 pt-28 pb-14 md:px-10 md:pb-20"
+      // A soft, close-held shadow — the way a film title or magazine
+      // headline holds over a bright photograph — so every letter keeps its
+      // edge regardless of exactly what's behind it, without needing a
+      // heavier background plate. Inherits to every child below.
+      className="relative mx-auto flex h-full w-full max-w-[1440px] flex-col justify-end px-6 pt-28 pb-14 [text-shadow:0_1px_3px_rgba(0,0,0,0.55),0_10px_28px_rgba(0,0,0,0.4)] md:px-10 md:pb-20"
     >
       <p
         data-origins-eyebrow
-        className="mb-6 flex items-center gap-4 text-[0.7rem] font-medium tracking-[0.3em] text-cream/75 uppercase md:mb-8"
+        className="mb-6 flex items-center gap-4 text-[0.7rem] font-medium tracking-[0.3em] text-cream/85 uppercase md:mb-8"
       >
         <span aria-hidden="true" className="h-px w-10 bg-gold" />
         The origin
@@ -44,7 +48,7 @@ export function OriginsCopy() {
         <div className="max-w-sm lg:col-span-4 lg:col-start-9 lg:pb-3">
           <p
             data-origins-text
-            className="text-base leading-relaxed text-cream/80 md:text-lg"
+            className="text-base leading-relaxed text-cream/90 md:text-lg"
           >
             High in the hills, tea grows slowly beneath cool mountain air and
             morning fog. Every harvest begins here.

@@ -81,7 +81,7 @@ function createScene(section: HTMLElement, { distance, scale }: Profile) {
     // The copy drifts a few pixels against the image — enough to read as
     // two depths, not enough to look like its own animation.
     .fromTo(q("[data-origins-copy]"), { y: 8 * scale }, { y: -8 * scale, duration: 1 }, 0)
-    .fromTo(q("[data-origins-scrim]"), { autoAlpha: 0.7 }, { autoAlpha: 1, duration: 1 }, 0);
+    .fromTo(q("[data-origins-scrim]"), { autoAlpha: 0.85 }, { autoAlpha: 1, duration: 1 }, 0);
 
   // Text reveal: eyebrow, then headline line by line, then body, then
   // location — small distances throughout, no overshoot.
