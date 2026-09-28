@@ -14,25 +14,24 @@ const MOBILE = "(max-width: 767.98px) and (prefers-reduced-motion: no-preference
 // these after the hero's pin spacing exists in the DOM.
 const REFRESH_AFTER_HERO = -1;
 
-// Matches the hero's own pinned scrub exactly, so both cinematic sections
-// feel like the same camera rather than two different scroll personalities.
+// Matches the hero's own pinned scrub, so both cinematic sections feel like
+// the same camera rather than two different scroll personalities.
 const SCRUB = 1;
 
 type Profile = {
-  /** Scroll length of the pinned story. */
+  /** Scroll length of the pin. */
   distance: string;
-  /** Multiplier for every parallax offset — lighter on smaller screens. */
-  parallax: number;
+  /** Multiplier for the (already small) movement — lighter on smaller screens. */
+  scale: number;
 };
 
 /**
- * Origins sequence: one ScrollTrigger, one timeline, pinned — the same
- * mechanism as the hero, so scrolling from one cinematic section into the
- * next feels continuous rather than switching styles. While pinned, the
- * landscape settles from a slight zoom, the glow and its ring drift and
- * turn, the two ridges separate in parallax, and the story copy reveals.
- * Every property is transform/opacity; there is no clip-path and no
- * blur() filter anywhere in this section, so nothing forces a repaint.
+ * Origins: one ScrollTrigger, one timeline, pinned like the hero. The
+ * photograph is the only thing that moves in any noticeable way — a slow
+ * settle from a slight zoom, with a few pixels of vertical drift — and the
+ * copy drifts a few pixels the other way for a faint sense of depth. Every
+ * number here is intentionally small: this should read as a held camera
+ * breathing, not as an animation.
  *
  * With reduced motion no handler runs: no pin, image and copy fully visible.
  */
@@ -43,9 +42,9 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
       if (!section) return;
 
       const mm = gsap.matchMedia();
-      mm.add(DESKTOP, () => createPinnedStory(section, { distance: "+=110%", parallax: 1 }));
-      mm.add(TABLET, () => createPinnedStory(section, { distance: "+=85%", parallax: 0.65 }));
-      mm.add(MOBILE, () => createPinnedStory(section, { distance: "+=55%", parallax: 0.4 }));
+      mm.add(DESKTOP, () => createScene(section, { distance: "+=90%", scale: 1 }));
+      mm.add(TABLET, () => createScene(section, { distance: "+=70%", scale: 0.7 }));
+      mm.add(MOBILE, () => createScene(section, { distance: "+=50%", scale: 0.5 }));
 
       return () => mm.revert();
     },
@@ -53,7 +52,7 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
   );
 }
 
-function createPinnedStory(section: HTMLElement, { distance, parallax }: Profile) {
+function createScene(section: HTMLElement, { distance, scale }: Profile) {
   const q = gsap.utils.selector(section);
 
   const tl = gsap.timeline({
@@ -70,30 +69,24 @@ function createPinnedStory(section: HTMLElement, { distance, parallax }: Profile
     },
   });
 
-  // The landscape settles from a slight zoom as the section locks into
-  // place — transform-only, no clip-path or filter involved.
-  tl.fromTo(q("[data-origins-landscape]"), { scale: 1 + 0.08 * parallax }, { scale: 1, duration: 0.6, ease: "power1.out" }, 0)
-    .fromTo(
-      q("[data-origins-glow]"),
-      { autoAlpha: 0.45, scale: 0.92, x: -10 * parallax },
-      { autoAlpha: 1, scale: 1, x: 10 * parallax, duration: 1 },
-      0,
-    )
-    .fromTo(q("[data-origins-ring]"), { rotation: 0, autoAlpha: 0 }, { rotation: 34 * parallax, autoAlpha: 0.4, duration: 1 }, 0)
-    .fromTo(q("[data-origins-ridge-far]"), { y: 36 * parallax }, { y: -14 * parallax, duration: 1 }, 0)
-    .fromTo(q("[data-origins-ridge-near]"), { y: 54 * parallax }, { y: -22 * parallax, duration: 1 }, 0)
-    // Closest to camera, so it travels furthest — the branch drifts past
-    // faster than anything behind it, the clearest parallax cue there is.
-    .fromTo(q("[data-origins-foreground]"), { y: 50 * parallax, autoAlpha: 0.75 }, { y: -10 * parallax, autoAlpha: 1, duration: 1 }, 0);
+  // The camera settling: a slight zoom easing off, with a few pixels of
+  // vertical drift — the only "big" move in the scene, and it is still
+  // small (20px of travel at most on desktop).
+  tl.fromTo(
+    q("[data-origins-image]"),
+    { scale: 1.08, y: -10 * scale },
+    { scale: 1, y: 10 * scale, duration: 1 },
+    0,
+  )
+    // The copy drifts a few pixels against the image — enough to read as
+    // two depths, not enough to look like its own animation.
+    .fromTo(q("[data-origins-copy]"), { y: 8 * scale }, { y: -8 * scale, duration: 1 }, 0)
+    .fromTo(q("[data-origins-scrim]"), { autoAlpha: 0.7 }, { autoAlpha: 1, duration: 1 }, 0);
 
-  // Story copy.
-  tl.fromTo(q("[data-origins-scrim]"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3 }, 0.05)
-    .fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.16)
-    .fromTo(q("[data-origins-line]"), { yPercent: 110 }, { yPercent: 0, duration: 0.22, stagger: 0.06, ease: "power3.out" }, 0.24)
-    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.2, ease: "power2.out" }, 0.46)
-    .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.62);
-
-  // Parallax and the ring keep drifting through to t=1, so the last third of
-  // the pin still has motion to follow rather than sitting dead once the
-  // copy has landed.
+  // Text reveal: eyebrow, then headline line by line, then body, then
+  // location — small distances throughout, no overshoot.
+  tl.fromTo(q("[data-origins-eyebrow]"), { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.16, ease: "power2.out" }, 0.12)
+    .fromTo(q("[data-origins-line]"), { yPercent: 100 }, { yPercent: 0, duration: 0.2, stagger: 0.06, ease: "power3.out" }, 0.22)
+    .fromTo(q("[data-origins-text]"), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.18, ease: "power2.out" }, 0.46)
+    .fromTo(q("[data-origins-location]"), { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.16, ease: "power2.out" }, 0.62);
 }
