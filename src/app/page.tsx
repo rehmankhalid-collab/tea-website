@@ -1,5 +1,6 @@
 import { Hero } from "@/components/hero/hero";
 import { SiteHeader } from "@/components/layout/site-header";
+import { Origins } from "@/components/origins/origins";
 
 export default function Home() {
   return (
@@ -7,7 +8,7 @@ export default function Home() {
       <SiteHeader />
       <main id="main" className="flex-1">
         <Hero />
-        {/* Next section goes here — the hero's scroll sequence hands off to it. */}
+        <Origins />
       </main>
     </>
   );
