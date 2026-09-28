@@ -32,3 +32,21 @@ body {
   background: var(--color-matcha);
   color: var(--color-ink);
 }
+
+/*
+ * Hide the hero until GSAP has set its entrance start state, avoiding a flash
+ * of the final layout. Only applies when JavaScript runs; the delayed
+ * animation is a failsafe that reveals it if the script never does.
+ */
+@media (scripting: enabled) {
+  [data-hero] {
+    visibility: hidden;
+    animation: hero-failsafe-reveal 0s 4s forwards;
+  }
+}
+
+@keyframes hero-failsafe-reveal {
+  to {
+    visibility: visible;
+  }
+}

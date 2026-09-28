@@ -7,6 +7,7 @@ export default function Home() {
       <SiteHeader />
       <main id="main" className="flex-1">
         <Hero />
+        {/* Next section goes here — the hero's scroll sequence hands off to it. */}
       </main>
     </>
   );
