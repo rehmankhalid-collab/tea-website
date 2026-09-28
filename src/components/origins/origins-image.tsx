@@ -1,13 +1,13 @@
-import type { ReactNode } from "react";
-
-import { TeaLeaf } from "@/components/ui/tea-leaf";
-
 /**
- * Placeholder landscape: layered SVG hills, mist and tea terraces at dawn.
- * Each `data-origins-layer` moves at its own `data-depth` for parallax.
- * To use photography later, replace the layers inside
- * `data-origins-landscape` with an <Image fill />; the animation targets
- * (`data-origins-image`, `data-origins-landscape`) stay the same.
+ * Atmospheric dawn-over-mountains backdrop, built entirely from gradients and
+ * two soft-edged ridge silhouettes — no blur() filters and no dashed/bitmap
+ * texture, so every layer is cheap to composite. `data-origins-landscape`
+ * takes the scale-settle; the glow and two ridges each carry their own
+ * `data-origins-*` target for a light, independent parallax drift.
+ *
+ * To use photography later, put an <Image fill> inside `data-origins-image`
+ * (behind or instead of the gradient) and keep the same data attributes —
+ * the animation only ever targets those, never the pixels inside them.
  */
 export function OriginsImage() {
   return (
@@ -15,122 +15,105 @@ export function OriginsImage() {
       data-origins-image
       className="absolute inset-0 overflow-hidden"
       role="img"
-      aria-label="Terraced tea fields on misty hills at dawn in Uji, Kyoto."
+      aria-label="A misty mountain ridge at dawn, glowing gold over the tea terraces of Uji, Kyoto."
     >
       <div data-origins-landscape className="absolute inset-0">
-        {/* Dawn sky */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,#15201a_0%,#34423a_34%,#8d8a6c_56%,#cdbf95_66%,#8f9272_76%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_28%_22%_at_58%_54%,rgba(246,228,182,0.7),transparent_70%)]" />
-
-        <Layer depth={0.2}>
-          <path
-            d="M0 600C120 560 200 520 300 540S470 470 600 500 820 430 960 455 1180 500 1300 470 1500 510 1600 490V1400H0Z"
-            fill="#7d8570"
-            fillOpacity="0.6"
-          />
-        </Layer>
-
-        <Mist className="top-[46%] h-[16%] opacity-70" />
-
-        <Layer depth={0.4}>
-          <path
-            d="M0 690C150 640 260 610 380 630S600 690 760 650 1000 580 1150 610 1420 680 1600 640V1400H0Z"
-            fill="#48584a"
-          />
-        </Layer>
-
-        <Mist className="top-[60%] h-[12%] opacity-50" />
-
-        <Layer depth={0.7}>
-          <path
-            d="M0 760C220 700 420 690 640 720S1060 780 1300 730 1520 700 1600 720V1400H0Z"
-            fill="#223320"
-          />
-          <TeaRows />
-        </Layer>
-
-        {/* Foreground bushes and out-of-focus leaves, closest to camera */}
+        {/* Dawn sky: a single smooth gradient carries all the color grading. */}
         <div
-          data-origins-foreground
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, #0d1410 0%, #182619 26%, #3d5236 44%, #c9b184 57%, #ecdcb2 63%, #48573b 73%, #182417 90%, #0d1410 100%)",
+          }}
+        />
+
+        {/* Soft dawn light pooling behind the ridge line. */}
+        <div
+          data-origins-glow
           aria-hidden="true"
-          className="absolute inset-x-0 bottom-0 h-[30%]"
-        >
-          <svg
-            viewBox="0 0 1600 300"
-            preserveAspectRatio="xMidYMax slice"
-            className="absolute inset-0 size-full blur-[1.5px]"
-            aria-hidden="true"
-          >
-            <path d={FOREGROUND_PATH} fill="#0c150e" />
-          </svg>
-          <TeaLeaf className="absolute -bottom-6 left-[4%] w-20 rotate-[28deg] text-moss blur-[5px] md:w-28" />
-          <TeaLeaf className="absolute right-[6%] bottom-[18%] w-14 -rotate-[36deg] text-leaf blur-[3px] md:w-20" />
-        </div>
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(38% 30% at 54% 46%, rgba(236,220,178,0.6), transparent 70%)",
+          }}
+        />
+
+        <Ridge
+          dataAttr="data-origins-ridge-far"
+          path="M0,560 C220,500 420,545 660,520 C900,495 1120,540 1360,515 C1460,505 1540,515 1600,510 L1600,900 L0,900 Z"
+          top="#5d6e4d"
+          bottom="#25321e"
+          opacity={0.75}
+        />
+
+        <Ridge
+          dataAttr="data-origins-ridge-near"
+          path="M0,700 C260,635 520,675 780,648 C1040,622 1300,660 1600,630 L1600,900 L0,900 Z"
+          top="#212f19"
+          bottom="#0a100a"
+          opacity={1}
+          rimLight
+        />
+
+        {/* Gentle vignette for edge falloff and text legibility, independent
+            of the scrim (which fades in on scroll). */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(120% 90% at 50% 30%, transparent 55%, rgba(6,10,7,0.55) 100%)",
+          }}
+        />
       </div>
     </div>
   );
 }
 
-function Layer({ depth, children }: { depth: number; children: ReactNode }) {
-  return (
-    <div data-origins-layer data-depth={depth} className="absolute inset-0">
-      <svg
-        viewBox="0 0 1600 1000"
-        preserveAspectRatio="xMidYMid slice"
-        className="size-full overflow-visible"
-        aria-hidden="true"
-      >
-        {children}
-      </svg>
-    </div>
-  );
-}
+function Ridge({
+  dataAttr,
+  path,
+  top,
+  bottom,
+  opacity,
+  rimLight,
+}: {
+  dataAttr: string;
+  path: string;
+  top: string;
+  bottom: string;
+  opacity: number;
+  rimLight?: boolean;
+}) {
+  // The ridgeline itself, isolated as the fill's top edge, reused for the
+  // rim-light strokes below — three widening, fading strokes fake a soft
+  // glow along the crest without a blur() filter.
+  const ridgeLine = path.slice(0, path.indexOf(" L"));
+  const gradientId = `${dataAttr.replace(/[^a-z-]/g, "")}-fill`;
 
-function Mist({ className }: { className: string }) {
   return (
-    <div
-      data-origins-mist
+    <svg
+      {...{ [dataAttr]: "" }}
+      viewBox="0 0 1600 900"
+      preserveAspectRatio="xMidYMax slice"
+      className="absolute inset-0 size-full"
+      style={{ opacity }}
       aria-hidden="true"
-      className={`absolute -inset-x-[10%] bg-[linear-gradient(to_bottom,transparent,rgba(226,220,198,0.45),transparent)] blur-2xl ${className}`}
-    />
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={top} />
+          <stop offset="1" stopColor={bottom} />
+        </linearGradient>
+      </defs>
+      <path d={path} fill={`url(#${gradientId})`} />
+      {rimLight && (
+        <g stroke="#e7cf9c" fill="none" strokeLinecap="round">
+          <path d={ridgeLine} strokeWidth={10} strokeOpacity={0.05} />
+          <path d={ridgeLine} strokeWidth={4} strokeOpacity={0.12} />
+          <path d={ridgeLine} strokeWidth={1.25} strokeOpacity={0.4} />
+        </g>
+      )}
+    </svg>
   );
 }
-
-// Terraced rows of tea bushes, spaced wider toward the viewer for depth.
-function TeaRows() {
-  return (
-    <g strokeLinecap="round" fill="none">
-      {Array.from({ length: 16 }, (_, i) => {
-        const y = 790 + i * 14 + i * i * 0.9;
-        const d = `M-40 ${y + 20}C300 ${y - 40} 700 ${y - 20} 1000 ${y + 10}S1450 ${y - 30} 1640 ${y}`;
-        const width = 4 + i * 0.7;
-        return (
-          <g key={i}>
-            <path d={d} stroke="#35512a" strokeWidth={width} strokeDasharray={`${30 + i * 3} ${4 + i * 0.4}`} />
-            <path
-              d={d}
-              stroke="#62804a"
-              strokeOpacity="0.45"
-              strokeWidth={width * 0.4}
-              strokeDasharray={`${30 + i * 3} ${4 + i * 0.4}`}
-              transform={`translate(0 ${-width * 0.35})`}
-            />
-          </g>
-        );
-      })}
-    </g>
-  );
-}
-
-// Irregular, rounded bush crowns (deterministic, so SSR and client match).
-const FOREGROUND_PATH = (() => {
-  let d = "M0 300V170";
-  for (let x = 0, i = 0; x < 1600; i++) {
-    const width = 70 + ((i * 37) % 5) * 22;
-    const crown = 60 + ((i * 53) % 7) * 12;
-    const base = 150 + ((i * 29) % 3) * 14;
-    d += `C${x + width * 0.12} ${crown} ${x + width * 0.88} ${crown} ${x + width} ${base}`;
-    x += width;
-  }
-  return `${d}V300Z`;
-})();
