@@ -29,11 +29,20 @@ const INCOMING: Spatial = { x: 0.62, y: 0, scale: 0.9, blur: 3 };
 /** Where the very first product starts, before it has been presented. */
 const ARRIVE_START: Spatial = { x: 0, y: 0.09, scale: 0.92, blur: 0 };
 
-/** The editorial three-up the section settles into — asymmetric on purpose. */
-const FINAL_SLOTS_DESKTOP: Spatial[] = [
-  { x: -0.86, y: 0, scale: 0.62, blur: 0 },
-  { x: 0, y: 0.05, scale: 0.58, blur: 0 },
-  { x: 0.86, y: -0.04, scale: 0.68, blur: 0 },
+/**
+ * The editorial three-up the section settles into — asymmetric on purpose.
+ * Unlike the camera-focus Spatial states above, `x` here is a fraction of
+ * the *stage's own width* (computed live, see `finalSpatial`), not of the
+ * small `unit` reference — the point of this state is to spread the three
+ * products widely across whatever width the site actually has, not to shift
+ * them by a fixed camera-relative amount.
+ */
+type FinalSlot = { xFactor: number; y: number; scale: number };
+
+const FINAL_SLOTS_DESKTOP: FinalSlot[] = [
+  { xFactor: -0.32, y: 0, scale: 0.82 },
+  { xFactor: 0, y: 18, scale: 0.74 },
+  { xFactor: 0.32, y: -16, scale: 0.88 },
 ];
 /**
  * Mobile: no room for three across, so the collection forms as a short
@@ -41,10 +50,10 @@ const FINAL_SLOTS_DESKTOP: Spatial[] = [
  * (see `trimFinalDetail` below), so three full captions never have to
  * share this little vertical room at once.
  */
-const FINAL_SLOTS_COMPACT: Spatial[] = [
-  { x: 0, y: -1.2, scale: 0.5, blur: 0 },
-  { x: 0, y: 0, scale: 0.48, blur: 0 },
-  { x: 0, y: 1.2, scale: 0.54, blur: 0 },
+const FINAL_SLOTS_COMPACT: FinalSlot[] = [
+  { xFactor: 0, y: -212, scale: 0.54 },
+  { xFactor: 0, y: 0, scale: 0.5 },
+  { xFactor: 0, y: 212, scale: 0.58 },
 ];
 
 /** Visual (photo) opacity per role — the photo fades gradually over a whole move. */
@@ -57,7 +66,7 @@ type Profile = {
   unit: number;
   /** Softens blur and travel distance on smaller screens. */
   intensity: number;
-  finalSlots: Spatial[];
+  finalSlots: FinalSlot[];
   /** Mobile only: hide each product's note/origin lines once the three-up forms, so a full caption never has to fit three-deep in a short stack. */
   trimFinalDetail?: boolean;
   /** Clearance from the fixed header above; mobile's stacked final composition needs a bit more. */
@@ -86,8 +95,8 @@ export function useCollectionAnimation(scope: RefObject<HTMLElement | null>) {
       const mm = gsap.matchMedia();
       mm.add(DESKTOP, () =>
         createSequence(section, {
-          distance: "+=500%",
-          unit: 260,
+          distance: "+=460%",
+          unit: 300,
           intensity: 1,
           finalSlots: FINAL_SLOTS_DESKTOP,
           topPad: "8rem",
@@ -95,12 +104,12 @@ export function useCollectionAnimation(scope: RefObject<HTMLElement | null>) {
       );
       mm.add(COMPACT, () =>
         createSequence(section, {
-          distance: "+=420%",
-          unit: 160,
+          distance: "+=400%",
+          unit: 190,
           intensity: 0.55,
           finalSlots: FINAL_SLOTS_COMPACT,
           trimFinalDetail: true,
-          topPad: "10.5rem",
+          topPad: "14.5rem",
         }),
       );
 
@@ -116,6 +125,22 @@ function spatial(role: Spatial, profile: Profile) {
     y: role.y * profile.unit,
     scale: role.scale,
     filter: `blur(${role.blur * profile.intensity}px)`,
+  };
+}
+
+/**
+ * The final three-up position for one product. `x` is a function GSAP
+ * re-evaluates against the stage's actual rendered width (capped to the
+ * site's usual 1440px content width) rather than a fixed number, so the
+ * spread genuinely scales with however wide the page is instead of leaving
+ * the three products clustered in a fixed-width band in the middle.
+ */
+function finalSpatial(slot: FinalSlot, stage: HTMLElement) {
+  return {
+    x: () => Math.min(stage.clientWidth, 1440) * slot.xFactor,
+    y: slot.y,
+    scale: slot.scale,
+    filter: "blur(0px)",
   };
 }
 
@@ -177,11 +202,14 @@ function createSequence(section: HTMLElement, profile: Profile) {
     },
   });
 
-  const ARRIVE = 1.2;
-  const HOLD_HERO = 1.8;
+  // Sencha's own entrance is kept short relative to the rest of the
+  // sequence — it should feel almost immediate, not like a large chunk of
+  // scrolling is spent just waiting for the first product to fully appear.
+  const ARRIVE = 0.5;
+  const HOLD_HERO = 1.0;
   const TRANSITION = 2.5;
-  const HOLD_LAST = 0.8;
-  const FORM_FINAL = 1.2;
+  const HOLD_LAST = 0.7;
+  const FORM_FINAL = 1.1;
 
   // Sencha is presented: a calm settle into place, then a hold so it can be
   // seen before anything else moves.
@@ -205,7 +233,7 @@ function createSequence(section: HTMLElement, profile: Profile) {
   // The camera pulls back: all three settle into one editorial arrangement,
   // and whichever captions were hidden reappear together with it.
   targets.forEach((t, i) => {
-    tl.to(t.card, { ...spatial(profile.finalSlots[i], profile), duration: FORM_FINAL }, cursor).to(
+    tl.to(t.card, { ...finalSpatial(profile.finalSlots[i], stage), duration: FORM_FINAL }, cursor).to(
       t.visual,
       { opacity: 1, duration: FORM_FINAL },
       cursor,

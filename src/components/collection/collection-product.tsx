@@ -30,7 +30,7 @@ export function CollectionProduct({ tea, cardClassName }: { tea: CollectionTea; 
           className="absolute top-[8%] left-1/2 aspect-square w-[46%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_32%_28%,#2c3d2e,transparent_72%)] opacity-60 blur-2xl"
         />
 
-        <div data-product-visual className="relative w-full max-w-[11rem] sm:max-w-[13rem] lg:max-w-[15rem]">
+        <div data-product-visual className="relative w-full max-w-[13rem] sm:max-w-[16rem] lg:max-w-[19rem]">
           <Image
             src={tea.image}
             alt={`A Veyla tin of ${tea.name} tea`}
