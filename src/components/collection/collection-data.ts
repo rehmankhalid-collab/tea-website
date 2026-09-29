@@ -1,15 +1,20 @@
+import type { StaticImageData } from "next/image";
+
+import gyokuroTin from "../../../public/images/products/veyla-tin-gyokuro.png";
+import hojichaTin from "../../../public/images/products/veyla-tin-hojicha.png";
+import senchaTin from "../../../public/images/products/veyla-tin-sencha.png";
+
 export type CollectionTea = {
   id: "sencha" | "hojicha" | "gyokuro";
   number: string;
   name: string;
+  /** Short uppercase tasting kicker, matching what's printed on the tin. */
+  tags: string;
   note: string;
+  origin: string;
   weight: string;
   signature?: boolean;
-  /** Tea-fill gradient, centre to edge. */
-  fillFrom: string;
-  fillTo: string;
-  /** Loose-leaf accents scattered on top of the fill. */
-  leaf: string;
+  image: StaticImageData;
 };
 
 export const TEAS: CollectionTea[] = [
@@ -17,31 +22,31 @@ export const TEAS: CollectionTea[] = [
     id: "sencha",
     number: "No. 03",
     name: "Sencha",
+    tags: "Bright · Grassy · Spring",
     note: "Bright and grassy, the first flush of spring steamed within hours of picking.",
+    origin: "Shizuoka, Japan",
     weight: "50 g",
-    fillFrom: "#cddb92",
-    fillTo: "#6c8a3a",
-    leaf: "#8aa452",
+    image: senchaTin,
   },
   {
     id: "hojicha",
     number: "No. 05",
     name: "Hōjicha",
+    tags: "Roasted · Caramel · Evening",
     note: "Roasted over charcoal until sweet and toasty, gentle enough for evenings.",
+    origin: "Kyoto, Japan",
     weight: "50 g",
-    fillFrom: "#cd9c63",
-    fillTo: "#6b4020",
-    leaf: "#a3702f",
+    image: hojichaTin,
   },
   {
     id: "gyokuro",
     number: "No. 07",
     name: "Gyokuro",
+    tags: "Shade-grown · Umami · Sweet",
     note: "Shade-grown for three weeks before harvest — deep umami, quietly intense.",
+    origin: "Uji, Kyoto",
     weight: "50 g",
     signature: true,
-    fillFrom: "#63935a",
-    fillTo: "#20351d",
-    leaf: "#3f5c37",
+    image: gyokuroTin,
   },
 ];

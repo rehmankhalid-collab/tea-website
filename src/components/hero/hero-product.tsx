@@ -1,7 +1,12 @@
+import Image from "next/image";
+
+import heroTin from "../../../public/images/products/veyla-tin-brand.png";
+
 /**
- * Placeholder product still life: a tea caddy and a cup, drawn in SVG so it
- * stays crisp at any size. Swap the SVGs for product photography later —
- * keep the data attributes so animations keep their targets.
+ * Product still life: real tin photography beside an illustrated cup (kept
+ * as SVG since there's no product photo of it). The tin's own label reads
+ * only the brand mark — no specific tea name — since the Hero isn't about
+ * one numbered blend the way the Collection section is.
  */
 export function HeroProduct() {
   return (
@@ -30,134 +35,21 @@ export function HeroProduct() {
       />
 
       <figure className="absolute inset-0">
-        <TeaTin />
+        <Image
+          data-hero-tin
+          src={heroTin}
+          alt="A Veyla tea tin, its label showing only the brand mark"
+          priority
+          className="absolute bottom-[9%] left-[46%] h-auto w-[38%] -translate-x-1/2"
+        />
         <TeaCup />
         <figcaption className="sr-only">
-          A tin of Veyla No. 07 Gyokuro green tea beside a cup of freshly
-          steeped tea.
+          A tin of Veyla tea beside a cup of freshly steeped tea.
         </figcaption>
       </figure>
 
       <ProductNote />
     </div>
-  );
-}
-
-function TeaTin() {
-  return (
-    <svg
-      data-hero-tin
-      viewBox="0 0 240 440"
-      aria-hidden="true"
-      focusable="false"
-      className="absolute bottom-[9%] left-[46%] w-[44%] -translate-x-1/2 drop-shadow-[0_40px_40px_rgba(0,0,0,0.45)]"
-    >
-      <defs>
-        <linearGradient id="veyla-tin-body" x1="0" x2="1">
-          <stop offset="0" stopColor="#0f1812" />
-          <stop offset="0.16" stopColor="#2b3f31" />
-          <stop offset="0.3" stopColor="#577259" />
-          <stop offset="0.42" stopColor="#314736" />
-          <stop offset="0.8" stopColor="#152018" />
-          <stop offset="1" stopColor="#0b120d" />
-        </linearGradient>
-        <linearGradient id="veyla-tin-lid" x1="0" x2="1">
-          <stop offset="0" stopColor="#4f3f24" />
-          <stop offset="0.22" stopColor="#a58a55" />
-          <stop offset="0.34" stopColor="#e6d09c" />
-          <stop offset="0.5" stopColor="#a88b56" />
-          <stop offset="0.85" stopColor="#5a4829" />
-          <stop offset="1" stopColor="#3a2e19" />
-        </linearGradient>
-        <linearGradient id="veyla-tin-lid-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#f0dcaa" />
-          <stop offset="0.5" stopColor="#b3955d" />
-          <stop offset="1" stopColor="#6d5832" />
-        </linearGradient>
-        <linearGradient id="veyla-tin-label" x1="0" x2="1">
-          <stop offset="0" stopColor="#8f887a" />
-          <stop offset="0.25" stopColor="#e2dac7" />
-          <stop offset="0.38" stopColor="#f4eee0" />
-          <stop offset="0.7" stopColor="#d4ccb8" />
-          <stop offset="1" stopColor="#7c7668" />
-        </linearGradient>
-      </defs>
-
-      {/* Body */}
-      <path d="M14 84v328a106 16 0 0 0 212 0V84Z" fill="url(#veyla-tin-body)" />
-
-      {/* Label band, curved to follow the cylinder */}
-      <path
-        d="M14 168a106 16 0 0 0 212 0v164a106 16 0 0 1-212 0Z"
-        fill="url(#veyla-tin-label)"
-      />
-      <path
-        d="M14 180a106 16 0 0 0 212 0"
-        stroke="#1d2a20"
-        strokeOpacity="0.35"
-        fill="none"
-      />
-      <path
-        d="M14 320a106 16 0 0 0 212 0"
-        stroke="#1d2a20"
-        strokeOpacity="0.35"
-        fill="none"
-      />
-      <g fill="#1b271e" textAnchor="middle">
-        <text
-          x="120"
-          y="236"
-          className="font-display"
-          fontSize="34"
-          letterSpacing="3"
-        >
-          Veyla
-        </text>
-        <path d="M100 250h40" stroke="#b39458" strokeWidth="1" />
-        <text
-          x="120"
-          y="274"
-          className="font-sans"
-          fontSize="9.5"
-          fontWeight="600"
-          letterSpacing="4.5"
-        >
-          GYOKURO
-        </text>
-        <text
-          x="120"
-          y="300"
-          className="font-display"
-          fontSize="15"
-          fontStyle="italic"
-          fillOpacity="0.8"
-        >
-          No. 07
-        </text>
-      </g>
-
-      {/* Lid */}
-      <path d="M8 24v58a112 16 0 0 0 224 0V24Z" fill="url(#veyla-tin-lid)" />
-      <path
-        d="M8 70a112 16 0 0 0 224 0"
-        stroke="#2c2211"
-        strokeOpacity="0.45"
-        fill="none"
-      />
-      <ellipse cx="120" cy="24" rx="112" ry="16" fill="url(#veyla-tin-lid-top)" />
-      <ellipse
-        cx="120"
-        cy="24"
-        rx="94"
-        ry="11"
-        fill="none"
-        stroke="#fff4d6"
-        strokeOpacity="0.35"
-      />
-
-      {/* Specular highlight */}
-      <rect x="62" y="96" width="7" height="310" rx="3.5" fill="#fff" fillOpacity="0.06" />
-    </svg>
   );
 }
 
@@ -236,9 +128,9 @@ function ProductNote() {
       <span aria-hidden="true" className="mt-2 h-px w-12 bg-cream/30" />
       <p className="text-[0.7rem] leading-relaxed tracking-[0.18em] text-stone uppercase">
         <span className="block font-display text-2xl tracking-normal text-cream normal-case italic">
-          No. 07
+          Veyla
         </span>
-        Gyokuro · 60 g
+        Single estate · 50 g
       </p>
     </div>
   );
