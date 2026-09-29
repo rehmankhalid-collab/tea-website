@@ -31,11 +31,13 @@ const ARRIVE_START: Spatial = { x: 0, y: 0.09, scale: 0.92, blur: 0 };
 
 /**
  * The editorial three-up the section settles into — asymmetric on purpose.
- * Unlike the camera-focus Spatial states above, `x` here is a fraction of
- * the *stage's own width* (computed live, see `finalSpatial`), not of the
- * small `unit` reference — the point of this state is to spread the three
- * products widely across whatever width the site actually has, not to shift
- * them by a fixed camera-relative amount.
+ * `x` is a fraction of the *stage's own width* (computed live, see the final
+ * loop in `createSequence`), not of the small `unit` reference — the point
+ * of this state is to spread the three products widely across whatever
+ * width the site actually has. `y` is a small deliberate nudge added on top
+ * of a clearance line measured live from the heading (desktop), or ignored
+ * entirely in favor of computed sequential stacking (mobile — see
+ * `stackFinal`).
  */
 type FinalSlot = { xFactor: number; y: number; scale: number };
 
@@ -48,12 +50,13 @@ const FINAL_SLOTS_DESKTOP: FinalSlot[] = [
  * Mobile: no room for three across, so the collection forms as a short
  * stack instead — smaller still, and with the note/origin lines trimmed
  * (see `trimFinalDetail` below), so three full captions never have to
- * share this little vertical room at once.
+ * share this little vertical room at once. `y` is unused here — see
+ * `stackFinal`.
  */
 const FINAL_SLOTS_COMPACT: FinalSlot[] = [
-  { xFactor: 0, y: -212, scale: 0.54 },
-  { xFactor: 0, y: 0, scale: 0.5 },
-  { xFactor: 0, y: 212, scale: 0.58 },
+  { xFactor: 0, y: 0, scale: 0.44 },
+  { xFactor: 0, y: 0, scale: 0.4 },
+  { xFactor: 0, y: 0, scale: 0.46 },
 ];
 
 /** Visual (photo) opacity per role — the photo fades gradually over a whole move. */
@@ -69,7 +72,9 @@ type Profile = {
   finalSlots: FinalSlot[];
   /** Mobile only: hide each product's note/origin lines once the three-up forms, so a full caption never has to fit three-deep in a short stack. */
   trimFinalDetail?: boolean;
-  /** Clearance from the fixed header above; mobile's stacked final composition needs a bit more. */
+  /** Mobile only: place the three final slots as a sequential vertical stack (each one measured and placed below the last) instead of desktop's small fixed nudges. */
+  stackFinal?: boolean;
+  /** Clearance from the fixed header above, during the mid-sequence single-product views (the final composition's clearance is measured live instead — see `createSequence`). */
   topPad: string;
 };
 
@@ -109,7 +114,8 @@ export function useCollectionAnimation(scope: RefObject<HTMLElement | null>) {
           intensity: 0.55,
           finalSlots: FINAL_SLOTS_COMPACT,
           trimFinalDetail: true,
-          topPad: "14.5rem",
+          stackFinal: true,
+          topPad: "10.5rem",
         }),
       );
 
@@ -128,20 +134,19 @@ function spatial(role: Spatial, profile: Profile) {
   };
 }
 
-/**
- * The final three-up position for one product. `x` is a function GSAP
- * re-evaluates against the stage's actual rendered width (capped to the
- * site's usual 1440px content width) rather than a fixed number, so the
- * spread genuinely scales with however wide the page is instead of leaving
- * the three products clustered in a fixed-width band in the middle.
- */
-function finalSpatial(slot: FinalSlot, stage: HTMLElement) {
-  return {
-    x: () => Math.min(stage.clientWidth, 1440) * slot.xFactor,
-    y: slot.y,
-    scale: slot.scale,
-    filter: "blur(0px)",
-  };
+/** Breathing room below the persistent heading before the final composition's topmost tin begins. */
+const FINAL_CLEARANCE_GAP = 36;
+/** Vertical gap between one stacked mobile card and the next. */
+const STACK_GAP = 24;
+
+/** Combined layout height of a product's `[data-product-detail]` lines, margins included. */
+function detailHeight(product: HTMLElement) {
+  let total = 0;
+  product.querySelectorAll<HTMLElement>("[data-product-detail]").forEach((el) => {
+    const style = getComputedStyle(el);
+    total += el.offsetHeight + parseFloat(style.marginTop) + parseFloat(style.marginBottom);
+  });
+  return total;
 }
 
 type Targets = { card: HTMLElement; visual: HTMLElement; caption: HTMLElement };
@@ -157,6 +162,18 @@ function createSequence(section: HTMLElement, profile: Profile) {
     caption: product!.querySelector<HTMLElement>("[data-product-caption]")!,
   }));
   if (targets.some((t) => !t.card || !t.visual || !t.caption)) return;
+
+  // Anchor scaling to each card's top edge, not its center. Sencha, Hōjicha,
+  // and Gyokuro have differently tall captions (Gyokuro's "Signature" badge
+  // adds height), so a center-anchored scale — where the whole image+caption
+  // block shrinks toward its own middle — puts each tin's image at a
+  // different screen height purely because their unscaled boxes are
+  // different heights. Anchoring at the top keeps every tin's image starting
+  // at the same row regardless of scale or caption length.
+  gsap.set(
+    targets.map((t) => t.card),
+    { transformOrigin: "top center" },
+  );
 
   // Turn the normal-flow, all-visible default markup into a single
   // viewport-height stage with every product stacked in the same spot — a
@@ -232,12 +249,46 @@ function createSequence(section: HTMLElement, profile: Profile) {
 
   // The camera pulls back: all three settle into one editorial arrangement,
   // and whichever captions were hidden reappear together with it.
+  //
+  // Each final position is computed relative to the heading's own measured
+  // height, not by letting flex-centering land wherever the available
+  // height happens to put it — that centering is sensitive to viewport
+  // height (a short laptop window centers everything higher), which used to
+  // let the top tin drift up into the heading text on shorter screens
+  // regardless of how much scroll room or padding was tuned in. Reading
+  // `headingEl.offsetTop + offsetHeight` (layout properties, unaffected by
+  // any transform) gives the heading's true rendered bottom edge, and
+  // subtracting each card's own natural `offsetTop` cancels out its
+  // flex-centered position entirely, leaving a `y` that places its image
+  // at an exact, explicit row every time.
+  const headingEl = section.querySelector<HTMLElement>("#collection-title")!.parentElement!;
+  const clearance = headingEl.offsetTop + headingEl.offsetHeight + FINAL_CLEARANCE_GAP;
+  let stackCursor = clearance;
+
   targets.forEach((t, i) => {
-    tl.to(t.card, { ...finalSpatial(profile.finalSlots[i], stage), duration: FORM_FINAL }, cursor).to(
-      t.visual,
-      { opacity: 1, duration: FORM_FINAL },
+    const slot = profile.finalSlots[i];
+    const cardEl = t.card;
+    const targetTop = profile.stackFinal ? stackCursor : clearance + slot.y;
+    if (profile.stackFinal) {
+      // `trimFinalDetail` only fades the note/origin lines to opacity 0 —
+      // they still occupy their layout height, which would otherwise waste
+      // a third of the stack's budget on space nothing is drawn into.
+      // Excluding it here doesn't change what's rendered, only how tightly
+      // the next card is placed below this one.
+      stackCursor = targetTop + (cardEl.offsetHeight - detailHeight(products[i]!)) * slot.scale + STACK_GAP;
+    }
+
+    tl.to(
+      cardEl,
+      {
+        x: () => Math.min(stage.clientWidth, 1440) * slot.xFactor,
+        y: () => targetTop - cardEl.offsetTop,
+        scale: slot.scale,
+        filter: "blur(0px)",
+        duration: FORM_FINAL,
+      },
       cursor,
-    );
+    ).to(t.visual, { opacity: 1, duration: FORM_FINAL }, cursor);
     if (i !== 2) tl.to(t.caption, { opacity: 1, duration: FORM_FINAL * 0.6, ease: "power1.out" }, cursor + FORM_FINAL * 0.4);
     if (profile.trimFinalDetail) {
       const detail = products[i]!.querySelectorAll<HTMLElement>("[data-product-detail]");
