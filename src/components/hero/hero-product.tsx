@@ -40,7 +40,7 @@ export function HeroProduct() {
           src={heroTin}
           alt="A Veyla tea tin, its label showing only the brand mark"
           priority
-          className="absolute top-[44%] left-1/2 h-auto w-[58%] -translate-x-1/2 -translate-y-1/2"
+          className="absolute top-[39%] left-1/2 h-auto w-[58%] -translate-x-1/2 -translate-y-1/2"
         />
         <TeaCup />
         <figcaption className="sr-only">
@@ -57,7 +57,7 @@ function TeaCup() {
   return (
     <div
       data-hero-cup
-      className="absolute bottom-[4%] left-[2%] w-[42%] drop-shadow-[0_30px_30px_rgba(0,0,0,0.5)]"
+      className="absolute bottom-[26%] left-[23%] w-[34%] drop-shadow-[0_30px_30px_rgba(0,0,0,0.5)]"
     >
       <svg
         data-hero-steam

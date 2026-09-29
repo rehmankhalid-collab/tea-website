@@ -138,6 +138,8 @@ function spatial(role: Spatial, profile: Profile) {
 const FINAL_CLEARANCE_GAP = 36;
 /** Vertical gap between one stacked mobile card and the next. */
 const STACK_GAP = 24;
+/** Breathing room below the final composition's lowest edge. */
+const BOTTOM_SAFETY = 28;
 
 /** Combined layout height of a product's `[data-product-detail]` lines, margins included. */
 function detailHeight(product: HTMLElement) {
@@ -263,19 +265,39 @@ function createSequence(section: HTMLElement, profile: Profile) {
   // at an exact, explicit row every time.
   const headingEl = section.querySelector<HTMLElement>("#collection-title")!.parentElement!;
   const clearance = headingEl.offsetTop + headingEl.offsetHeight + FINAL_CLEARANCE_GAP;
+
+  // Each card's own natural (unscaled) height, with the invisible
+  // note/origin lines excluded where they're trimmed away — the same
+  // quantity the stacking math below needs twice, so it's measured once.
+  const naturalHeights = targets.map(
+    (t, i) => t.card.offsetHeight - (profile.trimFinalDetail ? detailHeight(products[i]!) : 0),
+  );
+
+  // If the nominal sizing wouldn't fit in the room actually available below
+  // the heading on this device — a short laptop window, a tall product
+  // note, a browser zoomed in — shrink the whole final composition
+  // uniformly rather than letting the lowest card's caption run off the
+  // bottom of the pinned stage with no way to scroll further and see it.
+  const availableHeight = stage.clientHeight - clearance - BOTTOM_SAFETY;
+  const nominalBottom = profile.stackFinal
+    ? naturalHeights.reduce((sum, h, i) => sum + h * profile.finalSlots[i].scale, 0) + STACK_GAP * (naturalHeights.length - 1)
+    : Math.max(...profile.finalSlots.map((slot, i) => slot.y + naturalHeights[i] * slot.scale));
+  const fit = nominalBottom > availableHeight ? availableHeight / nominalBottom : 1;
+
   let stackCursor = clearance;
 
   targets.forEach((t, i) => {
     const slot = profile.finalSlots[i];
     const cardEl = t.card;
-    const targetTop = profile.stackFinal ? stackCursor : clearance + slot.y;
+    const effectiveScale = slot.scale * fit;
+    const targetTop = profile.stackFinal ? stackCursor : clearance + slot.y * fit;
     if (profile.stackFinal) {
       // `trimFinalDetail` only fades the note/origin lines to opacity 0 —
       // they still occupy their layout height, which would otherwise waste
       // a third of the stack's budget on space nothing is drawn into.
       // Excluding it here doesn't change what's rendered, only how tightly
       // the next card is placed below this one.
-      stackCursor = targetTop + (cardEl.offsetHeight - detailHeight(products[i]!)) * slot.scale + STACK_GAP;
+      stackCursor = targetTop + naturalHeights[i] * effectiveScale + STACK_GAP * fit;
     }
 
     tl.to(
@@ -283,7 +305,7 @@ function createSequence(section: HTMLElement, profile: Profile) {
       {
         x: () => Math.min(stage.clientWidth, 1440) * slot.xFactor,
         y: () => targetTop - cardEl.offsetTop,
-        scale: slot.scale,
+        scale: effectiveScale,
         filter: "blur(0px)",
         duration: FORM_FINAL,
       },
