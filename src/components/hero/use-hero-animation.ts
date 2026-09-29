@@ -154,7 +154,13 @@ function createScrollScenes(section: HTMLElement) {
       },
       0,
     )
-      .to(q("[data-hero-tin]"), { yPercent: -4, duration: 1, ease: "sine.inOut" }, 0)
+      // The tin carries Tailwind's `-translate-x/y-1/2` centring, which GSAP
+      // can't reconcile with an absolute `yPercent` tween (see the note atop
+      // this file) — it would overwrite the -50% centring instead of nudging
+      // it, snapping the tin sharply off its centred position. Plain pixel
+      // `y` composes with that centring correctly instead, exactly like the
+      // disc's own tween just below does.
+      .to(q("[data-hero-tin]"), { y: -8, duration: 1, ease: "sine.inOut" }, 0)
       .to(q("[data-hero-cup]"), { xPercent: -10, yPercent: 4, duration: 1, ease: "sine.inOut" }, 0)
       .to(q("[data-hero-steam]"), { yPercent: -18, scaleY: 1.15, transformOrigin: "50% 100%", duration: 1 }, 0)
       .to(q("[data-hero-disc]"), { y: -14, duration: 1 }, 0)

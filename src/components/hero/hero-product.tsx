@@ -57,7 +57,7 @@ function TeaCup() {
   return (
     <div
       data-hero-cup
-      className="absolute bottom-[26%] left-[23%] w-[34%] drop-shadow-[0_30px_30px_rgba(0,0,0,0.5)]"
+      className="absolute bottom-[26%] left-[24%] w-[31%] drop-shadow-[0_30px_30px_rgba(0,0,0,0.5)]"
     >
       <svg
         data-hero-steam
