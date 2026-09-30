@@ -43,7 +43,7 @@ export function Journal() {
         className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-linear-to-b from-ink to-transparent md:h-56"
       />
 
-      <div className="relative mx-auto max-w-[1440px] px-6 pt-32 pb-28 md:px-10 md:pt-40 md:pb-36">
+      <div className="relative mx-auto max-w-[1440px] px-6 pt-32 pb-8 md:px-10 md:pt-40 md:pb-10">
         <JournalIntro />
 
         <div className="mt-16 grid grid-cols-1 gap-14 md:mt-20 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-0">
@@ -61,9 +61,18 @@ export function Journal() {
         </div>
       </div>
 
-      {/* Breathing room before Section 7 (not yet built) — establishes the
-          transition space without borrowing that section's own palette. */}
-      <div aria-hidden="true" className="h-24 md:h-32" />
+      {/*
+       * The close: curiosity (the stories) has to soften into desire before
+       * Section 7's invitation can land. Section 7 isn't built yet, but it
+       * returns to the site's dark ink register ("Bring the ritual home"),
+       * so this reads as unhurried cream breathing room first, then eases
+       * toward that ink over its final third — never a hard cut, never any
+       * Section 7 content (copy, product, price) of its own.
+       */}
+      <div
+        aria-hidden="true"
+        className="h-72 bg-linear-to-b from-cream from-40% to-ink md:h-80 lg:h-96"
+      />
     </section>
   );
 }
