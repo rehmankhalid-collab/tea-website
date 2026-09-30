@@ -1,5 +1,6 @@
 import { Collection } from "@/components/collection/collection";
 import { Hero } from "@/components/hero/hero";
+import { Journal } from "@/components/journal/journal";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Origins } from "@/components/origins/origins";
 import { Philosophy } from "@/components/philosophy/philosophy";
@@ -15,6 +16,7 @@ export default function Home() {
         <Collection />
         <Ritual />
         <Philosophy />
+        <Journal />
       </main>
     </>
   );

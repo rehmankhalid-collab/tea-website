@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useLenis } from "@/components/providers/smooth-scroll-provider";
 import { ArrowIcon } from "@/components/ui/arrow-icon";
 import { Logo } from "@/components/ui/logo";
+import { ScrollTrigger, useGSAP } from "@/lib/gsap";
+
+// Hero creates its own pinned ScrollTrigger ~3.6s after mount, shifting
+// everything below it down the page — see the same note in every section's
+// animation hook. Lower priority re-measures this trigger's position after
+// that settles.
+const REFRESH_AFTER_HERO = -1;
 
 const NAV_LINKS = [
   { href: "#collection", label: "Collection" },
@@ -16,7 +23,40 @@ const NAV_LINKS = [
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [onLight, setOnLight] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const lenis = useLenis();
+
+  // Every section so far has been dark, so a transparent header with cream
+  // text has always had enough contrast. A section can opt into a light
+  // background by marking itself `data-header-theme="light"` (see
+  // `journal.tsx`); once one scrolls under the fixed header, this switches
+  // the header itself to a dark-on-cream scrim for exactly the span it
+  // overlaps, then back once it's past. No effect on any section that
+  // doesn't set the attribute.
+  useGSAP(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const lightSections = document.querySelectorAll<HTMLElement>('[data-header-theme="light"]');
+    if (!lightSections.length) return;
+
+    const triggers = Array.from(lightSections).map((section) =>
+      ScrollTrigger.create({
+        trigger: section,
+        start: () => `top ${header.offsetHeight}`,
+        end: () => `bottom ${header.offsetHeight}`,
+        refreshPriority: REFRESH_AFTER_HERO,
+        onEnter: () => setOnLight(true),
+        onEnterBack: () => setOnLight(true),
+        onLeave: () => setOnLight(false),
+        onLeaveBack: () => setOnLight(false),
+      }),
+    );
+
+    document.fonts?.ready.then(() => ScrollTrigger.refresh());
+
+    return () => triggers.forEach((trigger) => trigger.kill());
+  }, []);
 
   // Lock scrolling and allow Escape to close while the mobile menu is open.
   useEffect(() => {
@@ -42,7 +82,15 @@ export function SiteHeader() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header data-site-header className="fixed inset-x-0 top-0 z-50 text-cream">
+    <header
+      ref={headerRef}
+      data-site-header
+      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-500 ${
+        onLight
+          ? "bg-cream/90 text-ink shadow-[0_1px_0_0_rgba(26,26,26,0.08)] backdrop-blur-md"
+          : "text-cream"
+      }`}
+    >
       {/* Mobile / tablet menu panel */}
       <div
         id="mobile-menu"
@@ -92,7 +140,11 @@ export function SiteHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-[0.7rem] font-medium uppercase tracking-[0.24em] text-cream/70 transition-colors hover:text-cream focus-visible:text-cream"
+                  className={`text-[0.7rem] font-medium uppercase tracking-[0.24em] transition-colors ${
+                    onLight
+                      ? "text-ink/60 hover:text-ink focus-visible:text-ink"
+                      : "text-cream/70 hover:text-cream focus-visible:text-cream"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -104,7 +156,11 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           <a
             href="#collection"
-            className="hidden items-center gap-2.5 rounded-full border border-cream/25 px-5 py-2.5 text-[0.7rem] font-medium uppercase tracking-[0.2em] transition-colors hover:border-cream hover:bg-cream hover:text-ink sm:inline-flex"
+            className={`hidden items-center gap-2.5 rounded-full border px-5 py-2.5 text-[0.7rem] font-medium uppercase tracking-[0.2em] transition-colors sm:inline-flex ${
+              onLight
+                ? "border-ink/25 hover:border-ink hover:bg-ink hover:text-cream"
+                : "border-cream/25 hover:border-cream hover:bg-cream hover:text-ink"
+            }`}
           >
             Shop tea
             <ArrowIcon className="size-3.5" />
@@ -115,7 +171,9 @@ export function SiteHeader() {
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             onClick={() => setMenuOpen((open) => !open)}
-            className="relative flex size-11 items-center justify-center rounded-full border border-cream/25 lg:hidden"
+            className={`relative flex size-11 items-center justify-center rounded-full border lg:hidden ${
+              onLight ? "border-ink/25" : "border-cream/25"
+            }`}
           >
             <span className="sr-only">{menuOpen ? "Close menu" : "Open menu"}</span>
             <span
