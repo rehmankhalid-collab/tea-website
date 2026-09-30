@@ -35,7 +35,7 @@ export function Ritual() {
       id="rituals"
       data-ritual
       aria-labelledby="ritual-title"
-      className="relative bg-[#140f0a]"
+      className="relative bg-charcoal"
     >
       <h2 id="ritual-title" className="sr-only">
         The ritual
@@ -72,7 +72,7 @@ export function Ritual() {
       <div
         data-ritual-fade
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-2/5 bg-linear-to-t from-[#140f0a] to-transparent opacity-0"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-2/5 bg-linear-to-t from-charcoal to-transparent opacity-0"
       />
     </section>
   );

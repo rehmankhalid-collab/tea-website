@@ -21,6 +21,17 @@ export function Origins() {
     >
       <OriginsImage />
 
+      {/* Hero exits into near-black ink; without this the photo's bright
+          sunrise would slam to full brightness within a few pixels of
+          scroll. Starts opaque (matching the ink the hero fades into) and
+          lifts away in the timeline's opening beat, so the cut becomes a
+          graduated reveal instead. */}
+      <div
+        data-origins-entry-veil
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[5] bg-ink opacity-0"
+      />
+
       {/* A quiet, film-toned grade rather than a graphic overlay: a faint
           overall tint toward the brand's palette, and darkening that holds
           the full height the type occupies — solid enough at the type to

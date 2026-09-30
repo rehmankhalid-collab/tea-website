@@ -41,10 +41,17 @@ export function useOriginsAnimation(scope: RefObject<HTMLElement | null>) {
       const section = scope.current;
       if (!section) return;
 
+      // The section is a full h-svh box but the scrub only spans `distance`
+      // of extra scroll — once the pin releases the (now unpinned, static)
+      // section still has to scroll its own height away before Collection
+      // arrives. A short distance made that leftover stretch a large,
+      // conspicuously idle fraction of the section; widening it here instead
+      // gives the camera-settle/copy timeline (unchanged below) more room to
+      // breathe and shrinks that tail to roughly a third of the section.
       const mm = gsap.matchMedia();
-      mm.add(DESKTOP, () => createScene(section, { distance: "+=90%", scale: 1 }));
-      mm.add(TABLET, () => createScene(section, { distance: "+=70%", scale: 0.7 }));
-      mm.add(MOBILE, () => createScene(section, { distance: "+=50%", scale: 0.5 }));
+      mm.add(DESKTOP, () => createScene(section, { distance: "+=200%", scale: 1 }));
+      mm.add(TABLET, () => createScene(section, { distance: "+=150%", scale: 0.7 }));
+      mm.add(MOBILE, () => createScene(section, { distance: "+=110%", scale: 0.5 }));
 
       return () => mm.revert();
     },
@@ -68,6 +75,11 @@ function createScene(section: HTMLElement, { distance, scale }: Profile) {
       refreshPriority: REFRESH_AFTER_HERO,
     },
   });
+
+  // Hero fades out into near-black ink; lift this veil in the timeline's
+  // opening beat so the photo's brightness ramps in instead of cutting in
+  // all at once — done well before the eyebrow starts in at 0.12.
+  tl.fromTo(q("[data-origins-entry-veil]"), { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.14, ease: "power1.out" }, 0);
 
   // The camera settling: a slight zoom easing off, with a few pixels of
   // vertical drift — the only "big" move in the scene, and it is still
