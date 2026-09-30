@@ -15,6 +15,8 @@ export type CollectionTea = {
   weight: string;
   signature?: boolean;
   image: StaticImageData;
+  /** Placeholder pricing (USD) — swaps in cleanly once real prices exist. */
+  price: number;
 };
 
 export const TEAS: CollectionTea[] = [
@@ -27,6 +29,7 @@ export const TEAS: CollectionTea[] = [
     origin: "Shizuoka, Japan",
     weight: "50 g",
     image: senchaTin,
+    price: 28,
   },
   {
     id: "hojicha",
@@ -37,6 +40,7 @@ export const TEAS: CollectionTea[] = [
     origin: "Kyoto, Japan",
     weight: "50 g",
     image: hojichaTin,
+    price: 26,
   },
   {
     id: "gyokuro",
@@ -48,5 +52,6 @@ export const TEAS: CollectionTea[] = [
     weight: "50 g",
     signature: true,
     image: gyokuroTin,
+    price: 42,
   },
 ];

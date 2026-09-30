@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Instrument_Serif } from "next/font/google";
 import "lenis/dist/lenis.css";
 
+import { CartProvider } from "@/components/providers/cart-provider";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 
 import "./globals.css";
@@ -37,7 +38,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        <CartProvider>
+          <SmoothScrollProvider>{children}</SmoothScrollProvider>
+        </CartProvider>
       </body>
     </html>
   );

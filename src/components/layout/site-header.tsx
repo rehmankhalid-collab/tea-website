@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { CartDrawer } from "@/components/cart/cart-drawer";
+import { useCart } from "@/components/providers/cart-provider";
 import { useLenis } from "@/components/providers/smooth-scroll-provider";
 import { ArrowIcon } from "@/components/ui/arrow-icon";
+import { CartIcon } from "@/components/ui/cart-icon";
 import { Logo } from "@/components/ui/logo";
 import { ScrollTrigger, useGSAP } from "@/lib/gsap";
 
@@ -26,6 +29,7 @@ export function SiteHeader() {
   const [onLight, setOnLight] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const lenis = useLenis();
+  const cart = useCart();
 
   // Every section so far has been dark, so a transparent header with cream
   // text has always had enough contrast. A section can opt into a light
@@ -118,7 +122,7 @@ export function SiteHeader() {
             ))}
           </ul>
           <a
-            href="#collection"
+            href="#shop"
             onClick={closeMenu}
             className="inline-flex items-center justify-center gap-3 rounded-full bg-cream px-7 py-4 text-sm font-medium text-ink"
           >
@@ -155,7 +159,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-3">
           <a
-            href="#collection"
+            href="#shop"
             className={`hidden items-center gap-2.5 rounded-full border px-5 py-2.5 text-[0.7rem] font-medium uppercase tracking-[0.2em] transition-colors sm:inline-flex ${
               onLight
                 ? "border-ink/25 hover:border-ink hover:bg-ink hover:text-cream"
@@ -165,6 +169,25 @@ export function SiteHeader() {
             Shop tea
             <ArrowIcon className="size-3.5" />
           </a>
+
+          <button
+            type="button"
+            onClick={cart.open}
+            className={`relative flex size-11 items-center justify-center rounded-full border ${
+              onLight ? "border-ink/25" : "border-cream/25"
+            }`}
+          >
+            <span className="sr-only">Open cart{cart.count > 0 ? ` (${cart.count} items)` : ""}</span>
+            <CartIcon className="size-4" />
+            {cart.count > 0 && (
+              <span
+                aria-hidden="true"
+                className="bg-gold text-ink absolute -top-1 -right-1 flex size-[1.15rem] items-center justify-center rounded-full text-[0.6rem] font-medium"
+              >
+                {cart.count}
+              </span>
+            )}
+          </button>
 
           <button
             type="button"
@@ -187,6 +210,8 @@ export function SiteHeader() {
           </button>
         </div>
       </div>
+
+      <CartDrawer />
     </header>
   );
 }
