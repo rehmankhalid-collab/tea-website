@@ -2,6 +2,7 @@ import { Collection } from "@/components/collection/collection";
 import { Hero } from "@/components/hero/hero";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Origins } from "@/components/origins/origins";
+import { Ritual } from "@/components/ritual/ritual";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
         <Hero />
         <Origins />
         <Collection />
+        <Ritual />
       </main>
     </>
   );
